@@ -128,8 +128,9 @@ export function OrderForm() {
       values.packageIndex !== "" ? packages[Number(values.packageIndex)] : undefined;
 
     const timeout = setTimeout(async () => {
-      console.log("[checkout-tracking] firing update-or-insert now", checkoutSessionId.current);
+      console.log("[checkout-tracking] firing upsert now", checkoutSessionId.current);
       const fields = {
+        session_id: checkoutSessionId.current,
         site: "diabal-kenya",
         customer_name: values.customerName.trim() || null,
         phone: values.phone.trim() || null,
@@ -140,23 +141,13 @@ export function OrderForm() {
         delivery_address: values.deliveryAddress.trim() || null,
       };
 
-      const { data: updated, error: updateError } = await supabase
+      // A single upsert keyed on session_id — no read-back required, so it
+      // doesn't matter whether anon has SELECT access on this table.
+      const { error } = await supabase
         .from("checkout_events")
-        .update(fields)
-        .eq("session_id", checkoutSessionId.current)
-        .select("id");
+        .upsert(fields, { onConflict: "session_id" });
 
-      console.log("[checkout-tracking] update attempt result:", {
-        data: updated,
-        error: updateError,
-      });
-
-      if (!updateError && updated && updated.length > 0) return;
-
-      const insertResult = await supabase
-        .from("checkout_events")
-        .insert({ session_id: checkoutSessionId.current, ...fields });
-      console.log("[checkout-tracking] fallback insert result:", insertResult);
+      console.log("[checkout-tracking] upsert result:", { error });
     }, 1500);
 
     return () => clearTimeout(timeout);
@@ -190,24 +181,24 @@ export function OrderForm() {
     setIsSubmitting(true);
 
     const selectedPackage = packages[Number(values.packageIndex)] ?? packages[0]!;
-    const { data: insertedOrder, error } = await supabase
-      .from("orders")
-      .insert({
-        site: "diabal-kenya",
-        customer_name: values.customerName.trim(),
-        phone: trimmedPhone,
-        email: trimmedEmail || null,
-        delivery_address: values.deliveryAddress.trim(),
-        state: values.state,
-        preferred_delivery_date: values.preferredDeliveryDate || null,
-        gender: values.gender || null,
-        package_name: selectedPackage.name,
-        package_price: selectedPackage.price,
-        quantity: 1,
-        notes: values.notes.trim() || null,
-      })
-      .select("id")
-      .single();
+    // Deliberately no .select() here: anon only has INSERT on orders (by
+    // design — it must not be able to read back customer data), and
+    // chaining .select() forces PostgREST to also check SELECT privilege,
+    // which fails for anon and turns a successful insert into a 401.
+    const { error } = await supabase.from("orders").insert({
+      site: "diabal-kenya",
+      customer_name: values.customerName.trim(),
+      phone: trimmedPhone,
+      email: trimmedEmail || null,
+      delivery_address: values.deliveryAddress.trim(),
+      state: values.state,
+      preferred_delivery_date: values.preferredDeliveryDate || null,
+      gender: values.gender || null,
+      package_name: selectedPackage.name,
+      package_price: selectedPackage.price,
+      quantity: 1,
+      notes: values.notes.trim() || null,
+    });
 
     setIsSubmitting(false);
     if (error) {
@@ -216,22 +207,14 @@ export function OrderForm() {
     }
 
     if (hasTrackedStart.current) {
-      const completionFields = {
-        site: "diabal-kenya",
-        status: "completed",
-        order_id: insertedOrder?.id ?? null,
-      };
-      void supabase
-        .from("checkout_events")
-        .update(completionFields)
-        .eq("session_id", checkoutSessionId.current)
-        .select("id")
-        .then(({ data: updated, error: updateError }) => {
-          if (!updateError && updated && updated.length > 0) return;
-          void supabase
-            .from("checkout_events")
-            .insert({ session_id: checkoutSessionId.current, ...completionFields });
-        });
+      void supabase.from("checkout_events").upsert(
+        {
+          session_id: checkoutSessionId.current,
+          site: "diabal-kenya",
+          status: "completed",
+        },
+        { onConflict: "session_id" },
+      );
     }
 
     navigate({ to: "/thank-you" });
