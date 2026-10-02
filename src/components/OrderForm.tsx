@@ -185,16 +185,12 @@ export function OrderForm() {
     event.preventDefault();
     setErrorMessage("");
 
-    if (!values.customerName.trim()) {
-      setErrorMessage("Please enter your full name.");
+    if (!values.packageIndex) {
+      setErrorMessage("Please select an offer.");
       return;
     }
 
     const trimmedPhone = values.phone.trim();
-    if (!trimmedPhone) {
-      setErrorMessage("Please enter your phone number.");
-      return;
-    }
     if (!KENYA_LOCAL_PHONE_REGEX.test(trimmedPhone)) {
       setErrorMessage("Please enter a valid Kenyan phone number starting with 0, e.g. 0712345678.");
       return;
@@ -203,31 +199,6 @@ export function OrderForm() {
     const trimmedEmail = values.email.trim();
     if (trimmedEmail && !EMAIL_REGEX.test(trimmedEmail)) {
       setErrorMessage("Please enter a valid email address, e.g. name@example.com.");
-      return;
-    }
-
-    if (!values.packageIndex) {
-      setErrorMessage("Please select an offer.");
-      return;
-    }
-
-    if (!values.state) {
-      setErrorMessage("Please select your delivery state.");
-      return;
-    }
-
-    if (!values.deliveryAddress.trim()) {
-      setErrorMessage("Please enter your delivery address.");
-      return;
-    }
-
-    if (!values.preferredDeliveryDate) {
-      setErrorMessage("Please select a preferred delivery date.");
-      return;
-    }
-
-    if (!values.gender) {
-      setErrorMessage("Please select your gender.");
       return;
     }
 
@@ -412,7 +383,7 @@ export function OrderForm() {
             htmlFor="preferred-delivery-date"
             className="text-xs font-bold uppercase tracking-wide"
           >
-            Preferred delivery date <span className="text-destructive">*</span>
+            Preferred delivery date
           </Label>
           <Select
             value={values.preferredDeliveryDate}
@@ -433,7 +404,7 @@ export function OrderForm() {
 
         <div className="space-y-2">
           <Label htmlFor="gender" className="text-xs font-bold uppercase tracking-wide">
-            Gender <span className="text-destructive">*</span>
+            Gender
           </Label>
           <Select value={values.gender} onValueChange={(value) => updateValue("gender", value)}>
             <SelectTrigger id="gender" className="h-11">
