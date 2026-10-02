@@ -1,0 +1,4 @@
+- [x] Create orders and roles database schema with RLS and grants
+- [x] Replace hosted checkout iframe with custom order form and order submission
+- [x] Add admin credential bootstrap, login, order table, dates, and stats at /admin
+- [ ] Verify public checkout, order submission path, and admin route
