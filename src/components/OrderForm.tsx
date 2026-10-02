@@ -14,10 +14,34 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
+// yannisProductId is the same DIABAL product across all three tiers —
+// only quantity and offerLabel change per package. Captured from the
+// live diabalzambia order form's actual submit payload to form.hqyannis.com.
 const packages = [
-  { name: "Buy 1 Get 1 Free", units: "2 units", price: 7500 },
-  { name: "Buy 4 Get 2 Free", units: "6 units", price: 18000 },
-  { name: "Buy 8 Get 4 Free", units: "12 units", price: 30000 },
+  {
+    name: "Buy 1 Get 1 Free",
+    units: "2 units",
+    price: 7500,
+    yannisProductId: "019e44c7-8812-7f32-b973-be14af74eef9",
+    yannisQuantity: 2,
+    offerLabel: "BUY 1 GET 1 FREE",
+  },
+  {
+    name: "Buy 4 Get 2 Free",
+    units: "6 units",
+    price: 18000,
+    yannisProductId: "019e44c7-8812-7f32-b973-be14af74eef9",
+    yannisQuantity: 6,
+    offerLabel: "BUY 4 GET 2 FREE",
+  },
+  {
+    name: "Buy 8 Get 4 Free",
+    units: "12 units",
+    price: 30000,
+    yannisProductId: "019e44c7-8812-7f32-b973-be14af74eef9",
+    yannisQuantity: 12,
+    offerLabel: "BUY 8 GET 4 FREE",
+  },
 ];
 
 const genderOptions = ["Male", "Female"];
@@ -198,6 +222,9 @@ export function OrderForm() {
       package_price: selectedPackage.price,
       quantity: 1,
       notes: values.notes.trim() || null,
+      yannis_product_id: selectedPackage.yannisProductId,
+      yannis_quantity: selectedPackage.yannisQuantity,
+      offer_label: selectedPackage.offerLabel,
     });
 
     setIsSubmitting(false);
