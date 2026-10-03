@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const IMG = {
   hero: "/images/hero.jpg",
@@ -149,6 +151,86 @@ const faqs = [
   },
 ];
 
+// Recent-purchase social-proof popup, cycling through sample orders —
+// same pattern as the one already running on the WordPress blog
+// (balm.gethealthyforever.club). Packs match the real package sizes (2/6/12).
+const recentPurchases = [
+  { name: "Daniel", county: "Nairobi", packs: 6 },
+  { name: "Brian", county: "Lamu", packs: 2 },
+  { name: "Grace", county: "Mombasa", packs: 12 },
+  { name: "Faith", county: "Kisumu", packs: 2 },
+  { name: "Peter", county: "Nakuru", packs: 6 },
+  { name: "Mercy", county: "Kiambu", packs: 2 },
+  { name: "Kevin", county: "Uasin Gishu", packs: 12 },
+  { name: "Lucy", county: "Kisii", packs: 6 },
+  { name: "James", county: "Machakos", packs: 2 },
+  { name: "Esther", county: "Meru", packs: 6 },
+];
+
+const NOTIFICATION_VISIBLE_MS = 5000;
+const NOTIFICATION_GAP_MS = 6000;
+
+function PurchaseNotification() {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (dismissed) return;
+
+    const showTimer = setTimeout(() => setVisible(true), 2000);
+    return () => clearTimeout(showTimer);
+  }, [dismissed]);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    const hideTimer = setTimeout(() => {
+      setVisible(false);
+      setIndex((current) => (current + 1) % recentPurchases.length);
+    }, NOTIFICATION_VISIBLE_MS);
+
+    return () => clearTimeout(hideTimer);
+  }, [visible]);
+
+  useEffect(() => {
+    if (visible || dismissed) return;
+
+    const nextTimer = setTimeout(() => setVisible(true), NOTIFICATION_GAP_MS);
+    return () => clearTimeout(nextTimer);
+  }, [visible, dismissed, index]);
+
+  if (dismissed) return null;
+
+  const order = recentPurchases[index]!;
+
+  return (
+    <div
+      className={cn(
+        "fixed bottom-4 left-4 z-50 flex max-w-xs items-center gap-3 rounded-xl border bg-white p-3 pr-8 shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-all duration-300",
+        visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0",
+      )}
+      role="status"
+    >
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#AC2815] text-sm font-extrabold text-white">
+        {order.name.charAt(0)}
+      </span>
+      <span className="text-sm leading-snug text-black">
+        <span className="font-bold">{order.name}</span> bought {order.packs} packs from{" "}
+        {order.county}
+      </span>
+      <button
+        type="button"
+        onClick={() => setDismissed(true)}
+        aria-label="Dismiss notification"
+        className="absolute right-2 top-2 text-xs text-muted-foreground hover:text-black"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 function LandingPage() {
   return (
     <div className="w-full overflow-x-hidden bg-white text-black [font-family:'Montserrat',sans-serif]">
@@ -164,6 +246,8 @@ function LandingPage() {
       >
         Order Now
       </Link>
+
+      <PurchaseNotification />
 
       {/* HERO */}
       <header className="w-full bg-gradient-to-br from-white to-[#f8f8f8] px-4 pb-10 pt-16 sm:px-6 sm:pt-20">
