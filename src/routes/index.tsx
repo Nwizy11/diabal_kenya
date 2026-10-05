@@ -10,9 +10,9 @@ const IMG = {
   testimonial2: "/images/testimonial-2.jpg",
   testimonial3: "/images/testimonial-3.jpg",
   riskFree: "/images/risk-free.png",
-  pack1: "/images/pack-1.jpeg",
-  pack2: "/images/pack-2.jpeg",
-  pack3: "/images/pack-3.jpeg",
+  pack1: "/images/pack-1.jpg",
+  pack2: "/images/pack-2.jpg",
+  pack3: "/images/pack-3.jpg",
 };
 
 const TITLE = "DIABAL Herbal Diabetes Tea Kenya | Natural Blood Sugar Support";
